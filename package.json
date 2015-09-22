@@ -1,0 +1,55 @@
+{
+  "name": "clusterfork",
+  "version": "0.0.1",
+  "description": "An extremely simple way to cluster your node process for production purposes",
+  "main": "./src/clusterfork.js",
+  "bin": "./bin/cli.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mboudreau/clusterfork.git"
+  },
+  "keywords": [
+    "clusterfork",
+    "cluster",
+    "fork",
+    "cpu"
+  ],
+  "author": {
+    "name": "Michel Boudreau",
+    "email": "michelboudreau@gmail.com",
+    "url": "codinghitchhiker.com"
+  },
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/mboudreau/clusterfork/blob/master/LICENSE"
+  },
+  "bugs": {
+    "url": "https://github.com/mboudreau/clusterfork/issues"
+  },
+  "dependencies": {
+    "check-types": "~3.3.1",
+    "commander": "^2.8.1",
+    "q": "^1.4.1"
+  },
+  "devDependencies": {
+    "chai": "^3.2.0",
+    "jscs": "^2.1.0",
+    "mocha": "^2.2.5",
+    "nodemon": "^1.4.1",
+    "rimraf": "^2.4.2",
+    "sinon": "^1.15.4"
+  },
+  "engine": {
+    "node": ">=0.12.0"
+  },
+  "scripts": {
+    "clean": "./node_modules/.bin/rimraf logs/*",
+    "lint": "./node_modules/.bin/jscs src",
+    "test": "./node_modules/.bin/mocha -R spec src/**/*.spec.js --timeout 10000",
+    "watch": "./node_modules/.bin/nodemon -x npm run dev",
+    "watch:debug": "./node_modules/.bin/nodemon --debug -q -w assets/ --ext '.' --exec 'npm run lint'",
+    "dev": "npm run clean && npm run lint --force && npm test && node .",
+    "start": "npm run watch",
+    "prepublish": "npm test"
+  }
+}
