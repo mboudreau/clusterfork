@@ -2,7 +2,8 @@
 
 'use strict';
 
-var cluster = require('cluster');
+var cluster = require('cluster'),
+	check = require('check-types');
 
 function ClusterFork(forking, workers) {
 	if (!forking && typeof forking !== 'function') {

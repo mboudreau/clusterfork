@@ -28,8 +28,7 @@
   },
   "dependencies": {
     "check-types": "~3.3.1",
-    "commander": "^2.8.1",
-    "q": "^1.4.1"
+    "commander": "^2.8.1"
   },
   "devDependencies": {
     "chai": "^3.2.0",
