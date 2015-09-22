@@ -1,22 +1,16 @@
 /* global process:true */
-
 'use strict';
 
 var cluster = require('cluster'),
 	check = require('check-types');
 
 function ClusterFork(forking, workers) {
-	if (!forking && typeof forking !== 'function') {
-		throw new Error('Forking function not defined properly.');
-	}
+	check.assert.not.function(forking, 'Forking function not defined properly.');
 	this.forking = forking;
-	this.workers = typeof workers === 'undefined' ? 1 : workers;
-
-	if (this.workers === 0) {
-		this.workers = require('os').cpus().length;
-	}
+	this.workers = check.undefined(workers) ? 1 : workers || require('os').cpus().length;
 }
 
+// TODO: use promises
 ClusterFork.prototype.start = function () {
 	// If master process, spin up other processes under it
 	if (cluster.isMaster) {
@@ -45,14 +39,11 @@ ClusterFork.prototype.start = function () {
 };
 
 ClusterFork.prototype.stop = function () {
+	cluster.disconnect();
 	return this;
 };
 
 ClusterFork.prototype.restart = function () {
-	return this;
-};
-
-ClusterFork.prototype.rollingUpdate = function () {
 	return this;
 };
 

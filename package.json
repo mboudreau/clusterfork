@@ -1,6 +1,6 @@
 {
   "name": "clusterfork",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An extremely simple way to cluster your node process for production purposes",
   "main": "./src/clusterfork.js",
   "bin": "./bin/cli.js",
