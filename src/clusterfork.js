@@ -2,12 +2,33 @@
 'use strict';
 
 var cluster = require('cluster'),
-	check = require('check-types');
+	check = require('check-types'),
+	fs = require('fs'),
+	path = require('path'),
+	maxCpus = require('os').cpus().length;
 
 function ClusterFork(forking, workers) {
-	check.assert.not.function(forking, 'Forking function not defined properly.');
+	// check if forking is string, array, or function
+	if (check.string(forking)) {
+		forking = [forking];
+	}
+	if (check.array(forking)) {
+		var filePath = forking[0];
+		check.assert.ok(fs.lstatSync(path.resolve(filePath)).isFile(), 'The path, `' + filePath + '` is not a valid file');
+		var req = require(forking);
+		forking = forking[1] ? req[forking[1]] : req;
+	}
+	check.assert.function(forking, 'Forking function not defined properly.');
+
+	// Worker Check
+	check.assert.integer(workers, 'Worker amount must be an integer.');
+	check.assert.positive(workers, 'Worker amount must be a positive number.');
+	if (check.greater(workers, maxCpus)) {
+		console.warn('Worker amount greater than CPUs available, limiting to maximum CPUs.  Use `0` instead to automatically scale to max CPUs.')
+	}
+
 	this.forking = forking;
-	this.workers = check.undefined(workers) ? 1 : workers || require('os').cpus().length;
+	this.workers = workers === 0 ? maxCpus : Math.min(workers || 1, maxCpus);
 }
 
 // TODO: use promises

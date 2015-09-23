@@ -21,18 +21,13 @@ program
 
 if (!filePath) {
 	console.error('No file to run, exiting');
-	process.exit(0);
-} else if (!fs.statSync(path).isFile()) {
-	console.error('File path `' + filePath + '` is incorrect.');
 	process.exit(1);
 }
 
-var file = require(filePath);
-var forking = funcName ? file[funcName] : file;
+var forking = [filePath];
 
-if (!forking) {
-	console.error('Forking function not defined.');
-	process.exit(1);
+if (funcName) {
+	forking.push(funcName);
 }
 
 cf(
