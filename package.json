@@ -1,6 +1,6 @@
 {
   "name": "clusterfork",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An extremely simple way to cluster your node process for production purposes",
   "main": "./src/clusterfork.js",
   "bin": "./bin/cli.js",
@@ -28,7 +28,8 @@
   },
   "dependencies": {
     "check-types": "~3.3.1",
-    "commander": "^2.8.1"
+    "commander": "^2.8.1",
+    "q": "^1.4.1"
   },
   "devDependencies": {
     "chai": "^3.2.0",

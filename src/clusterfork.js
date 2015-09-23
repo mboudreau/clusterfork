@@ -5,6 +5,7 @@ var cluster = require('cluster'),
 	check = require('check-types'),
 	fs = require('fs'),
 	path = require('path'),
+	q = require('q'),
 	maxCpus = require('os').cpus().length;
 
 function ClusterFork(forking, workers) {
@@ -31,41 +32,59 @@ function ClusterFork(forking, workers) {
 	this.workers = workers === 0 ? maxCpus : Math.min(workers || 1, maxCpus);
 }
 
-// TODO: use promises
 ClusterFork.prototype.start = function () {
+	var deferred = q.defer(),
+		that = this;
+
+	function createWorker() {
+		var worker = cluster.fork();
+
+		worker.once('listening', function (worker) {
+			console.info('Worker ' + worker.id + ' started');
+		});
+
+		// if a worker dies, respawn
+		worker.once('death', function (worker) {
+			console.warn('Worker ' + worker.id + ' died, restarting...');
+			createWorker();
+		});
+
+		return worker;
+	}
+
 	// If master process, spin up other processes under it
 	if (cluster.isMaster) {
 		console.info('Starting master, pid ' + process.pid + ', spawning ' + this.workers + ' workers');
 
 		// fork workers
-		for (var i = 0, len = this.workers; i < len; i++) {
-			cluster.fork();
+		var amount = 0;
+		for (var i = 0, len = that.workers; i < len; i++) {
+			createWorker().once('listening', function () {
+				amount++;
+				if (amount == that.workers) {
+					deferred.resolve(that);
+				}
+			});
 		}
-
-		cluster.on('listening', function (worker) {
-			console.info('Worker ' + worker.id + ' started');
-		});
-
-		// if a worker dies, respawn
-		cluster.on('death', function (worker) {
-			console.warn('Worker ' + worker.id + ' died, restarting...');
-			cluster.fork();
-		});
-
 	} else {
 		this.forking();
 	}
 
-	return this;
+	return deferred.promise.timeout(5000, 'Cluster forking timed out.');
 };
 
 ClusterFork.prototype.stop = function () {
-	cluster.disconnect();
-	return this;
+	var deferred = q.defer(),
+		that = this;
+
+	cluster.disconnect(function () {
+		deferred.resolve(that);
+	});
+	return deferred.promise.timeout(5000, 'Cluster disconnect timed out.');
 };
 
 ClusterFork.prototype.restart = function () {
-	return this;
+	return this.stop().then(this.start);
 };
 
 module.exports = function (forking, workers) {
