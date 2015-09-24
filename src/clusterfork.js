@@ -40,16 +40,16 @@ ClusterFork.prototype.start = function () {
 		var worker = cluster.fork();
 
 		worker.once('online', function () {
-			console.info('Worker ' + worker.id + ' started.');
+			console.info('Worker %s started.', worker.id);
 		});
 
 		worker.once('disconnect', function () {
-			console.info('Worker ' + worker.id + ' disconnecting.');
+			console.info('Worker %s disconnecting.', worker.id);
 		});
 
 		// if a worker dies, respawn
 		worker.once('exit', function () {
-			console.warn('Worker ' + worker.id + ' died, restarting...');
+			console.warn('Worker %s died, restarting...', worker.id);
 			createWorker();
 		});
 
@@ -58,7 +58,7 @@ ClusterFork.prototype.start = function () {
 
 	// If master process, spin up other processes under it
 	if (cluster.isMaster) {
-		console.info('Starting master, pid ' + process.pid + ', spawning ' + that.workers + ' worker' + (that.workers == 1?'':'s'));
+		console.info('Starting master, pid %s, spawning %d worker%s', process.pid, that.workers, (that.workers == 1 ? '' : 's'));
 
 		// fork workers
 		var amount = 0;
