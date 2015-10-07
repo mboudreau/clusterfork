@@ -23,7 +23,7 @@ function ClusterFork(forking, workers) {
 
 	// Worker Check
 	check.assert.integer(workers, 'Worker amount must be an integer.');
-	check.assert.positive(workers, 'Worker amount must be a positive number.');
+	check.assert.greaterOrEqual(workers, 0, 'Worker amount must be a positive number.');
 	if (check.greater(workers, maxCpus)) {
 		console.warn('Worker amount greater than CPUs available, limiting to maximum CPUs.  Use `0` instead to automatically scale to max CPUs.')
 	}
