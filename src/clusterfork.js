@@ -8,7 +8,7 @@ var cluster = require('cluster'),
 	q = require('q'),
 	maxCpus = require('os').cpus().length;
 
-function ClusterFork(forking, workers) {
+function ClusterFork(forking, workers, restart) {
 	// check if forking is string, array, or function
 	if (check.string(forking)) {
 		forking = [forking];
@@ -29,6 +29,7 @@ function ClusterFork(forking, workers) {
 	}
 
 	this.forking = forking;
+	this.restart = restart || false;
 	this.workers = workers === 0 ? maxCpus : Math.min(workers || 1, maxCpus);
 }
 
@@ -48,9 +49,12 @@ ClusterFork.prototype.start = function () {
 		});
 
 		// if a worker dies, respawn
-		worker.once('exit', function () {
-			console.warn('Worker %s died, restarting...', worker.id);
-			createWorker();
+		worker.once('exit', function (code) {
+			console.warn('Worker %s died, exited with code %d', worker.id, code);
+			if (that.restart) {
+				console.info('Restarting dead worker %s', worker.id);
+				createWorker();
+			}
 		});
 
 		return worker;
@@ -81,9 +85,14 @@ ClusterFork.prototype.stop = function () {
 	var deferred = q.defer(),
 		that = this;
 
-	cluster.disconnect(function () {
+	if (cluster && cluster.disconnect) {
+		cluster.disconnect(function () {
+			deferred.resolve(that);
+		});
+	} else {
 		deferred.resolve(that);
-	});
+	}
+
 	return deferred.promise.timeout(5000, 'Cluster disconnect timed out.');
 };
 
@@ -91,6 +100,6 @@ ClusterFork.prototype.restart = function () {
 	return this.stop().then(this.start);
 };
 
-module.exports = function (forking, workers) {
-	return new ClusterFork(forking, workers)
+module.exports = function (forking, workers, restart) {
+	return new ClusterFork(forking, workers, restart)
 };
