@@ -31,6 +31,7 @@ function ClusterFork(forking, workers, restart) {
 	this.forking = forking;
 	this.restart = restart || false;
 	this.workers = workers === 0 ? maxCpus : Math.min(workers || 1, maxCpus);
+	this._workerCount = 0;
 }
 
 ClusterFork.prototype.start = function () {
@@ -41,6 +42,7 @@ ClusterFork.prototype.start = function () {
 		var worker = cluster.fork();
 
 		worker.once('online', function () {
+			that._workerCount++;
 			console.info('Worker %s started.', worker.id);
 		});
 
@@ -50,10 +52,16 @@ ClusterFork.prototype.start = function () {
 
 		// if a worker dies, respawn
 		worker.once('exit', function (code) {
+			that._workerCount--;
 			console.warn('Worker %s died, exited with code %d', worker.id, code);
-			if (that.restart) {
+			// if worker died with an error, try to restart
+			if (that.restart && code !== 0) {
 				console.info('Restarting dead worker %s', worker.id);
 				createWorker();
+			} else if (that._workerCount == 0) {
+				console.info('No more workers available, killing master process with same exit code as workers.');
+				that.stop();
+				process.exit(code);
 			}
 		});
 
@@ -65,11 +73,9 @@ ClusterFork.prototype.start = function () {
 		console.info('Starting master, pid %s, spawning %d worker%s', process.pid, that.workers, (that.workers == 1 ? '' : 's'));
 
 		// fork workers
-		var amount = 0;
 		for (var i = 0, len = that.workers; i < len; i++) {
 			createWorker().once('online', function () {
-				amount++;
-				if (amount == that.workers) {
+				if (that._workerCount == that.workers) {
 					deferred.resolve(that);
 				}
 			});
